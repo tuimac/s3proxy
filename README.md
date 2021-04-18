@@ -19,7 +19,7 @@ You need to attach 'AdministratorAccess' which is AWS managed IAM policy to IAM 
 ## How to use
 Just execute AWS CLI below.
 ```
-aws cloudformation create-stack --stack-name wordpress --region ap-northeast-1 --capabilities CAPABILITY_NAMED_IAM --template-body file://template.yml
+aws cloudformation create-stack --stack-name s3proxy --region <Your region code> --capabilities CAPABILITY_NAMED_IAM --template-body file://template.yml
 ```
 Then you can create the environment like this below.
 
