@@ -1,6 +1,6 @@
 #!/bin/bash
 
-S3BUCKET=''
+S3BUCKET='123-testtest'
 FILENAME='policy.json'
 
 function createPolicy(){
