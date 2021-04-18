@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Create Entire VPN Network
+Description: Create S3 Proxy API Gateway
 
 Parameters:
   VpcCidr:
@@ -12,7 +12,11 @@ Parameters:
 
   S3BucketName:
     Type: String
-    Default: 7890-test
+    Default: 000-s3proxy
+
+  APIGatewayStageName:
+    Type: String
+    Default: dev
  
   NameTagKey:
     Type: String
@@ -187,7 +191,10 @@ Resources:
                 aws:sourceVpce: !Ref APIGatewayEndpoint
       Body:
         swagger: 2.0
-        basePath: /dev
+        basePath: !Join
+          - ''
+          - - /
+            - !Ref APIGatewayStageName 
         paths:
           /:
             get:
@@ -333,3 +340,8 @@ Resources:
               gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
               gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
               gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+  PrivateRestAPIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref PrivateRestAPI
+      StageName: !Ref APIGatewayStageName
