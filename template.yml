@@ -87,7 +87,7 @@ Resources:
   APIGatewayEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Red NameTagValue
+      GroupName: !Ref NameTagValue
       GroupDescription: Allow any IP through HTTPS
       VpcId: !Ref Vpc
       SecurityGroupIngress:
@@ -112,7 +112,8 @@ Resources:
         - !Ref APIGatewaySubnet
       VpcId: !Ref Vpc
       VpcEndpointType: Interface
-      SecurityGroupIds: !Ref APIGatewayEndpointSecurityGroup
+      SecurityGroupIds:
+        - !Ref APIGatewayEndpointSecurityGroup
       PrivateDnsEnabled: true
 
   # S3 Bucket
@@ -140,6 +141,47 @@ Resources:
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
-              - !Ref SeBucketName
-              - /*
-            Principal: apigateway.amazonaws.com
+                - !Ref S3BucketName
+                - /*
+            Principal:
+              Service: apigateway.amazonaws.com
+
+  # IAM Role
+  APIGatewayIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref NameTagValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Tags:
+        - Key: !Ref NameTagKey
+          Value: !Ref NameTagValue
+
+  # API Gateway
+  PrivateRestAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      EndpointConfiguration:
+        Types:
+          - PRIVATE
+        Name: !Ref NameTagValue
+        Policy:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: execute-api:Invoke
+              Resource: execute-api:/*
+              Condition:
+                StringEquals:
+                  aws:sourceVpce: !Ref APIGatewayEndpoint
