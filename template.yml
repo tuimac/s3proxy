@@ -9,7 +9,11 @@ Parameters:
   APIGatewaySubnetCidr:
     Type: String
     Default: 10.0.0.0/24
-  
+
+  S3BucketName:
+    Type: String
+    Default: 7890-test
+ 
   NameTagKey:
     Type: String
     Default: Name
@@ -79,35 +83,63 @@ Resources:
       RouteTableId: !Ref RouteTable
       SubnetId: !Ref APIGatewaySubnet
 
+  # Security Group
+  APIGatewayEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Red NameTagValue
+      GroupDescription: Allow any IP through HTTPS
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: !Ref NameTagKey
+          Value: !Ref NameTagValue
+
   # Endpoint
-  S3Endpoint:
+  APIGatewayEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      PolicyDocument: '{
-        "Version": "2012-10-17",
-        "Statement":[{
-          "Effect": "Allow",
-          "Principal": "*",
-          "Action": "*",
-          "Resource": "*"
-        }]
-      }'
-      RouteTableIds:
-        - !Ref RouteTable
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      ServiceName: !Join
+        - ''
+        - - com.amazonaws.
+          - !Ref 'AWS::Region'
+          - .execute-api
+      SubnetIds:
+        - !Ref APIGatewaySubnet
       VpcId: !Ref Vpc
+      VpcEndpointType: Interface
+      SecurityGroupIds: !Ref APIGatewayEndpointSecurityGroup
+      PrivateDnsEnabled: true
 
-	# API Gateway
-  
-  RestAPI:
-    Type: AWS::ApiGateway::RestApi
+  # S3 Bucket
+  Bucket:
+    Type: AWS::S3::Bucket
     Properties:
-      Name: !Sub 
-  RestAPIDeployment:
-    Type: AWS::ApiGateway::Deployment
+      BucketName: !Ref S3BucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: !Ref NameTagKey
+          Value: !Ref NameTagValue
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
     Properties:
-      RestApiId: !Ref RestAPI
-      Description: Automatically created by the RestApi construct
-    DependsOn:
-      - RestAPIproxyGET
-      - RestAPIproxy
+      Bucket: !Ref S3BucketName
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: Allow
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+              - !Ref SeBucketName
+              - /*
+            Principal: apigateway.amazonaws.com
