@@ -9,12 +9,25 @@ Private API Gateway associate with VPC Endpoint(com.amazonaws.REGION.execute-api
 ![s3proxy-entire](https://user-images.githubusercontent.com/18078024/115163783-031bae00-a0e6-11eb-8e83-0d7bb9713d0d.png)
 
 ## Prerequisite
+### AWS Environment
 Check below envirionment.
 - Create AWS Account.([Guide](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/?nc1=h_ls))
 - Install AWS CLI on your machine.([Installation Guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html))
 - Create IAM User or IAM Role for executing AWS CLI.([IAM user Creation Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/getting-started_create-admin-group.html), [IAM role Creation Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html))
 
 You need to attach 'AdministratorAccess' which is AWS managed IAM policy to IAM role or user you created.
+
+### Cloudformation Parameter
+You can customize the parameters in template.yml. The meaning of each parameter is below.
+
+| Parameter | Value |
+| ----- | ----- |
+| VpcCidr | VPC CIDR which API Gateway Endpoint is deployed. |
+| APIGatewaySubnetCidr | Subnet CIDR which API Gateway Endpoint is deployed. |
+| S3BucketName | S3 Bucket name which the frontend file is deployed must be unique in global. |
+| APIGatewayStageName | API Gateway stage name.(Stage names can only contain alphanumeric characters, hyphens, and underscores. Maximum length is 128 characters.) |
+| NameTagKey | All resources template.yml create have a part of Key Value. This parameter define Key. |
+| NameTagValue | All resources template.yml create have a part of Key Value. This parameter define Value. |
 
 ## How to use
 Just execute AWS CLI below.
